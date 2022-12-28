@@ -16,36 +16,65 @@ double bestAllTime=150.0;
 
 //créateur de temps
 double randomTime(){
-	int a=rand()%21000 +25000;
-	double b=(double)a/1000.0;
-	return b;
+    int a=rand()%21000 +25000;
+    double b=(double)a/1000.0;
+    return b;
 }
 
 //structure voiture
 typedef struct car{
-	int number;
-	double s1;
-	double s2;
-	double s3;
-	double bestTime;
-	int stands;
-	int abandon;
+    int number;
+    double s1;
+    double s2;
+    double s3;
+    double bestTime;
+    int stands;
+    int abandon;
 } Voiture;
-
-Voiture run[20];
-
 
 //initie les numéros de voiture dans le tableau run
 void fillRun(Voiture run[]){
-	for(int i=0;i<20;i++){
-		run[i].number=tab[i];	
-	}
+    for(int i=0;i<20;i++){
+        run[i].number=tab[i];    
+    }
 }
+
+//remplit les temps de chaque secteur pour chaque voiture dans le tableau run
+void fillLapTimes(Voiture run[]){
+    for(int i=0;i<20;i++){
+        run[i].s1=randomTime();
+        run[i].s2=randomTime();
+        run[i].s3=randomTime();
+    }
+}
+
+//mise à jour des meilleurs temps de chaque secteur et de chaque voiture
+void updateBestTimes(Voiture run[]){
+    for(int i=0; i<20; i++){
+        //mise à jour du meilleur temps de chaque secteur
+        if(run[i].s1 < bestS1){
+            bestS1 = run[i].s1;
+        }
+        if(run[i].s2 < bestS2){
+            bestS2 = run[i].s2;
+        }
+        if(run[i].s3 < bestS3){
+            bestS3 = run[i].s3;
+        }
+        //mise à jour du meilleur temps de chaque voiture
+        run[i].bestTime = run[i].s1 + run[i].s2 + run[i].s3;
+        //mise à jour du meilleur temps de la séance
+        if(run[i].bestTime < bestAllTime){
+            bestAllTime = run[i].bestTime;
+        }
+    }
+}
+
 
 //trie les voitures par leur Meilleur temps
 void tri(Voiture run[]){
-	Voiture a;
-	for (int i = 0; i < 20; ++i) {
+    Voiture a;
+    for (int i = 0; i < 20; ++i) {
 
             for (int j = i + 1; j < 20; ++j){
  
@@ -63,7 +92,7 @@ void tri(Voiture run[]){
 }
 
 // affichage
-void show(){
+void show(Voiture run[]){
     char *filename = "affichage.txt";
 	FILE *fichier = fopen(filename, "w");
     if (fichier == NULL)
@@ -88,73 +117,40 @@ void show(){
                 fprintf(fichier, " ");
     			printf(" ");
     		}
-            fprintf(fichier, " %2.3f  | + %2.3f  |   -----   |\n",run[i].bestTime,min);
-    		printf(" %2.3f  | + %2.3f  |   -----   |\n",run[i].bestTime,min);
-	    }
-	    else{
-            fprintf(fichier, "  %d   |   --   |   --   |   --   |   ----   |   ----   |     P     |",run[i].number);
-    	    printf("  %d   |   --   |   --   |   --   |   ----   |   ----   |     P     |",run[i].number);
+            fprintf(fichier, " %2.3f  | + %2.3f  |",run[i].bestTime,min);
+    		printf( " %2.3f  | + %2.3f  |",run[i].bestTime,min);
+    		if(run[i].stands==1){
+                fprintf(fichier, "   P   |\n");
+    			printf( "   P   |\n");
+    		}
+    		if(run[i].abandon==1){
+                fprintf(fichier, "   A   |\n");
+    			printf( "   A   |\n");
+    		}
+    		if(run[i].stands==0 && run[i].abandon==0){
+                fprintf(fichier, "        |\n");
+    			printf( "        |\n");
+    		}
     	}
-		
-	}
+    }
     fprintf(fichier, "-------------------------------------------------------------------------------\n");
 	printf("-------------------------------------------------------------------------------\n");
     fprintf(fichier, "BestS1 : %2.3f || BestS2 : %2.3f || BestS3 : %2.3f || BestTime : %2.3f\n",bestS1,bestS2,bestS3,bestAllTime);
 	printf("BestS1 : %2.3f || BestS2 : %2.3f || BestS3 : %2.3f || BestTime : %2.3f\n",bestS1,bestS2,bestS3,bestAllTime);
 	fclose(fichier);
-}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
+}
 
-// second jet du projet. utilisation de structures, mis en place d'un premier affichage
-int main(void){
-    int shmid = shmget(32, 21*sizeof(Voiture),IPC_CREAT|0666);
-    void *circuit =  shmat(shmid,0,0);
+int main(int argc, char const *argv[]) {
+    int i;
+    //mémoire partagée
+    int shmid = shmget(75,sizeof(int)*5,0666|IPC_CREAT);
+    Voiture *run = (Voiture *)shmat(shmid, NULL, 0);
     
-	fillRun(run);
-	double seg1;
-	double seg2;
-	double seg3;
-	double segt;
-	
-	for(int i=0;i<20;i++){
-		for(int j=0;j<10;j++){
-			seg1=randomTime();
-			seg2=randomTime();
-			seg3=randomTime();
-			segt=seg1+seg2+seg3;
-			
-			run[i].s1=seg1;
-			run[i].s2=seg2;
-			run[i].s3=seg3;
-			run[i].abandon = 0;
-			run[i].stands = 0;
-			
-			if(j==0){
-				run[i].bestTime=segt; 
-			}
-			else if(run[i].bestTime>segt){
-					run[i].bestTime=segt;
-			}
-			if(seg1<bestS1){
-				bestS1=seg1;
-			}
-			if(seg2<bestS2){
-				bestS2=seg2;
-			}
-			if(seg3<bestS3){
-				bestS3=seg3;
-			}
-			if(segt<bestAllTime){
-				bestAllTime=segt;
-			}
-			if(run[i].abandon == 1){
-			    run[i].s1=0;
-			    run[i].s2=0;
-			    run[i].s3=0;
-			    bestAllTime=0;
-			}
-		}
-	}
-	tri(run);
-	show();	
-	
+    fillRun(run);
+    fillLapTimes(run);
+    updateBestTimes(run);
+    tri(run);
+    show(run);
+    
+    return 0;
 }
