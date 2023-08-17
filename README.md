@@ -13,3 +13,4 @@ To launch the application, you need to
 change directory to server
 -npm i
 -npm run server
+# Recipe's App MODIFCATION
