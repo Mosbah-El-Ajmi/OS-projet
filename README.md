@@ -1,5 +1,5 @@
 # OS-projet
-# Recipe's App
+# Recipe's App MODIFCATION
 
 ## Fonctionnalities
 
